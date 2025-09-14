@@ -17,6 +17,8 @@ import {
 } from "react-icons/fi";
 import styles from "./Forum.module.css";
 
+import { supabase } from "../../backend/supabaseClient"; 
+
 const categories = [
   {
     id: 1,
@@ -59,6 +61,13 @@ export default function Forum() {
   const notifTimer = useRef(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Erro ao fazer logout:", error.message);
+    }
+  };
 
   const handleNotifClick = () => {
     setShowNotif(true);
@@ -124,7 +133,8 @@ export default function Forum() {
             <button
               className={styles.logoutBtn}
               aria-label="Sair"
-              onClick={() => navigate("/")}
+              // ADICIONADO: 3. Chamar a função handleLogout no onClick
+              onClick={handleLogout}
             >
               <FiLogOut />
             </button>

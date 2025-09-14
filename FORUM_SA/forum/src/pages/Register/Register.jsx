@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from "./Register.module.css";
+// Adicionado: Importação do cliente Supabase
+import { supabase } from '../../backend/supabaseClient'; // !! Verifique se o caminho está correto !!
 
 const Cadastro = () => {
+  // Seus estados existentes
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -10,11 +13,15 @@ const Cadastro = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    setError('');
+  // Adicionado: Estado para controlar o carregamento durante a requisição
+  const [loading, setLoading] = useState(false);
 
+  // A função handleSubmit agora é assíncrona para se comunicar com o Supabase
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     
+    // --- SUAS VALIDAÇÕES (MANTIDAS) ---
+    // A validação no lado do cliente é uma ótima prática e foi mantida.
     if (!name || !email || !password || !confirmPassword) {
       setError('Por favor, preencha todos os campos.');
       return;
@@ -24,17 +31,41 @@ const Cadastro = () => {
       return;
     }
     if (password.length < 6) {
-        setError('A senha deve ter no mínimo 6 caracteres.');
-        return;
+      setError('A senha deve ter no mínimo 6 caracteres.');
+      return;
     }
 
-   
-    console.log('Usuário cadastrado com sucesso:', { name, email });
+    // --- LÓGICA DO SUPABASE (ADICIONADA) ---
+    try {
+      setLoading(true);
+      setError(''); // Limpa erros anteriores
 
+      const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          // 'data' é usado para salvar informações adicionais do usuário (metadados)
+          data: {
+            full_name: name, // Salva o nome do usuário no perfil de autenticação
+          },
+        },
+      });
+
+      if (error) {
+        throw error; // Envia o erro para o bloco catch
+      }
+
+      alert('Cadastro realizado! Por favor, verifique sua caixa de entrada para confirmar seu e-mail.');
+      navigate('/login'); // Redireciona para a página de login
     
-    navigate('/login');
+    } catch (error) {
+      setError(error.message); // Exibe o erro retornado pelo Supabase
+    } finally {
+      setLoading(false); // Garante que o estado de loading termine
+    }
   };
 
+  // --- SEU JSX (VISUAL INALTERADO) ---
   return (
     <div className={styles.cadastroContainer}>
       <form onSubmit={handleSubmit} className={styles.cadastroFormContainer}>
@@ -81,15 +112,16 @@ const Cadastro = () => {
           <input
             id="confirmPassword"
             type="password"
-            placeholder=""
+            placeholder="Confirme sua senha"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className={styles.cadastroInput}
           />
         </div>
 
-        <button type="submit" className={styles.cadastroButton}>
-          Cadastrar
+        {/* Alterado: Botão agora mostra o estado de carregamento */}
+        <button type="submit" className={styles.cadastroButton} disabled={loading}>
+          {loading ? 'Cadastrando...' : 'Cadastrar'}
         </button>
 
         {error && <p className={styles.cadastroError}>{error}</p>}

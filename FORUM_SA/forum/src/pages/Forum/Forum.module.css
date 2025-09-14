@@ -68,9 +68,10 @@
 .topRight {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   min-width: 300px;
   justify-content: flex-end;
+  margin-left: 475px;
 }
 
 .iconBtn,
@@ -246,6 +247,7 @@
   border-radius: 6px;
   padding: 4px;
   font-size: 14px;
+  font-weight: 200;
 }
 
 .empty {
